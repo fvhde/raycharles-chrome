@@ -2,6 +2,21 @@
 
 import './popup.css';
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Request the image list from the background script
+  chrome.runtime.sendMessage(
+    {
+      type: 'GET_IMAGES'
+    },
+    (response) => {
+      if (response && response.images) {
+        console.log('Image count: ' + response.images.length);
+      }
+    }
+  );
+});
+
+
 (function () {
   // We will make use of Storage API to get and store `count` value
   // More information on Storage API can we found at
@@ -63,7 +78,6 @@ import './popup.css';
         // active tab by sending a message
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           const tab = tabs[0];
-
           chrome.tabs.sendMessage(
             tab.id,
             {

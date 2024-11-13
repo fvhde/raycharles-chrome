@@ -63,6 +63,12 @@ const common = {
       filename: '[name].css',
     }),
   ],
+  resolve: {
+    fallback: {
+      "path": require.resolve("path-browserify"),
+      "child_process": false
+    }
+  }
 };
 
 module.exports = common;

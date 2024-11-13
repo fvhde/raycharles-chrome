@@ -1,5 +1,7 @@
 'use strict';
 
+import compare from 'odiff-bin';
+
 // Content script file will run in the context of web page.
 // With content script you can manipulate the web pages using
 // Document Object Model (DOM).
@@ -12,32 +14,38 @@
 // See https://developer.chrome.com/extensions/content_scripts
 
 // Log `title` of current active web page
+console.log("contentScript.js is running");
+
 const pageTitle = document.head.getElementsByTagName('title')[0].innerHTML;
 console.log(
   `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
 );
 
 // Communicate with background file by sending a message
+// Function to collect all images on page load
+function getAllImages() {
+  return Array.from(document.getElementsByTagName('img')).map(img => img.src);
+}
+
+
+
+// Send the image URLs to the background script
+const imageUrls = getAllImages();
 chrome.runtime.sendMessage(
   {
-    type: 'GREETINGS',
-    payload: {
-      message: 'Hello, my name is Con. I am from ContentScript.',
-    },
+    type: 'IMAGE_LIST',
+    payload: { images: imageUrls },
   },
   (response) => {
-    console.log(response.message);
+    console.log(response.message || 'Image URLs sent to background script.');
   }
 );
-
 // Listen for message
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'COUNT') {
     console.log(`Current count is ${request.payload.count}`);
   }
 
-  // Send an empty response
-  // See https://github.com/mozilla/webextension-polyfill/issues/130#issuecomment-531531890
   sendResponse({});
   return true;
 });
