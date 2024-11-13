@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Raycharles Chrome",
+  "name": "RayCharles",
   "version": "0.1.0",
   "description": "My Chrome Extension",
   "icons": {
@@ -13,7 +13,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Raycharles Chrome",
+    "default_title": "RayCharles",
     "default_popup": "popup.html"
   },
   "permissions": [
