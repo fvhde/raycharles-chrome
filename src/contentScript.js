@@ -1,6 +1,6 @@
 'use strict';
 
-import compare from 'odiff-bin';
+import { averageHashFromUrl } from './fetchImage';
 
 // Content script file will run in the context of web page.
 // With content script you can manipulate the web pages using
@@ -17,35 +17,95 @@ import compare from 'odiff-bin';
 console.log("contentScript.js is running");
 
 const pageTitle = document.head.getElementsByTagName('title')[0].innerHTML;
-console.log(
-  `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
-);
+console.log(`Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`);
 
-// Communicate with background file by sending a message
-// Function to collect all images on page load
-function getAllImages() {
-  return Array.from(document.getElementsByTagName('img')).map(img => img.src);
-}
+const hashes = await getAllHashes();
+Array.from(document.getElementsByTagName('img')).forEach(async e => {
+  const hash = await averageHashFromUrl(e.src);
+  Object.keys(hashes).forEach(key => {
+    if (hammingDistance(hash, hashes[key]) <= 10) {
+      console.log(`Image ${e.src} is similar to ${key}`);
+      e.style.display = 'none';
+    }
+  });
+})
 
-
-
-// Send the image URLs to the background script
-const imageUrls = getAllImages();
+// Send message to the background script
 chrome.runtime.sendMessage(
   {
-    type: 'IMAGE_LIST',
-    payload: { images: imageUrls },
+    type: 'COUCOU',
+    payload: {},
   },
   (response) => {
-    console.log(response.message || 'Image URLs sent to background script.');
+    console.log(response.message || '');
   }
 );
+
 // Listen for message
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'COUNT') {
-    console.log(`Current count is ${request.payload.count}`);
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.type === 'ADD_IMAGE') {
+    let imageUrl = request.payload.src;
+    let storageKey = `imageHash_${imageUrl}`;
+
+    console.log(`Hidding ${imageUrl}`);
+
+    // Check if the hash is already stored
+    let hash = await getHashFromStorage(storageKey);
+
+    // If not, calculate and save it
+    if (!hash) {
+      console.log(`Calculating hash for ${imageUrl}`);
+      hash = await averageHashFromUrl(imageUrl);
+      await saveHashToStorage(storageKey, hash);
+    } else {
+      console.log(`Using stored hash for ${imageUrl}`);
+    }
   }
 
   sendResponse({});
   return true;
 });
+
+// Helper function to save data to Chrome's local storage
+function saveHashToStorage(key, value) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ [key]: value }, () => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+      resolve();
+    });
+  });
+}
+
+// Helper function to retrieve data from Chrome's local storage
+function getHashFromStorage(key) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(key, (result) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+      resolve(result[key]);
+    });
+  });
+}
+
+function getAllHashes() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(null, (items) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+
+      resolve(items);
+    });
+  });
+}
+
+function hammingDistance(hashA, hashB) {
+  let distance = 0;
+  for (let i = 0; i < hashA.length; i++) {
+    if (hashA[i] !== hashB[i]) distance++;
+  }
+  return distance;
+}

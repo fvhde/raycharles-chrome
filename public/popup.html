@@ -7,21 +7,14 @@
   </head>
   <body>
     <div class="app">
-      <p class="counter-label">Counter</p>
-      <div id="counter" class="counter"></div>
-      <div class="button-container">
-        <button id="decrementBtn" class="button">-</button>
-        <button id="incrementBtn" class="button">+</button>
-      </div>
-
+      <form id="inputForm">
+        <label for="userInput">Enter Text:</label>
+        <input type="text" id="userInput" name="userInput" required>
+        <button type="submit">Submit</button>
+      </form>
       <hr class="divider" />
-
-      <p class="title">Chrome Extension is Ready!</p>
-      <p class="subtitle">Start by updating <code>popup.html</code></p>
     </div>
-
     <script src="popup.js"></script>
-
     <!--
       This HTML file opens when you click on icon from the toolbar.
 

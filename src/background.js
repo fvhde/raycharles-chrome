@@ -1,5 +1,7 @@
 'use strict';
 
+import { averageHashFromUrl } from './fetchImage';
+
 // With background scripts you can communicate with popup
 // and contentScript files.
 // For more information on background script,
@@ -15,14 +17,14 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 let imageList = [];
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.type === 'GREETINGS') {
     const message = `Hi ${sender.tab ? 'Con' : 'Pop'}, my name is Bac. I am from Background. It's great to hear from you.`;
 
     console.log(request.payload.message);
     sendResponse({ message });
   }
+
   if (request.type === 'IMAGE_LIST') {
     // Store image list in memory
     imageList = request.payload.images;
