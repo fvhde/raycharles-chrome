@@ -30,17 +30,6 @@ Array.from(document.getElementsByTagName('img')).forEach(async e => {
   });
 })
 
-// Send message to the background script
-chrome.runtime.sendMessage(
-  {
-    type: 'COUCOU',
-    payload: {},
-  },
-  (response) => {
-    console.log(response.message || '');
-  }
-);
-
 // Listen for message
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.type === 'ADD_IMAGE') {
