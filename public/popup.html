@@ -1,25 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>My Chrome Extension</title>
-    <link rel="stylesheet" href="popup.css" />
-  </head>
-  <body>
-    <div class="app">
-      <form id="inputForm">
-        <label for="userInput">Enter Text:</label>
-        <input type="text" id="userInput" name="userInput" required>
-        <button type="submit">Submit</button>
-      </form>
-      <hr class="divider" />
+<head>
+  <meta charset="UTF-8" />
+  <title>Ray Charles</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+<div class="app">
+  <div class="container">
+    <div class="card shadow my-5">
+      <h4 class="card-header">Banned List</h4>
+      <div class="card-body">
+        <form class="mb-3" id="inputForm">
+          <label for="imageUrl">Image url</label>
+          <div class="input-group">
+            <input type="text" id="imageUrl" name="imageUrl" class="form-control">
+            <div class="input-group-append">
+              <button type="submit" name="btn" class="btn btn-outline-dark" disabled>Add</button>
+            </div>
+          </div>
+        </form>
+        <button type="button" id="deleteAll" class="btn btn-outline-danger mb-3">Delete all</button>
+        <ul class="list-group">
+          <li class="list-group-item" data-key="1">
+            <div class="row" id="list">
+              <div class="col-auto">
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteFruit(1)">Delete</button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="card-footer"></div>
     </div>
-    <script src="popup.js"></script>
-    <!--
-      This HTML file opens when you click on icon from the toolbar.
+  </div>
+</div>
 
-      To begin the development, run `npm run watch`.
-      To create a production bundle, use `npm run build`.
-    -->
-  </body>
+<script src="popup.js"></script>
+<!--
+  This HTML file opens when you click on icon from the toolbar.
+
+  To begin the development, run `npm run watch`.
+  To create a production bundle, use `npm run build`.
+-->
+</body>
 </html>
