@@ -1,4 +1,10 @@
 /* normalize css starts here */
+@import 'https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.6.0/yeti/bootstrap.min.css';
+
+form label {
+  cursor: pointer;
+}
+
 *,
 *::before,
 *::after {

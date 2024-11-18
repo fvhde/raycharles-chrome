@@ -7,14 +7,15 @@
 </head>
 <body>
 <div class="app">
-  <div class="container">
     <div class="card shadow my-5">
       <h4 class="card-header">Banned List</h4>
       <div class="card-body">
         <form class="mb-3" id="inputForm">
           <label for="imageUrl">Image url</label>
           <div class="input-group">
-            <input type="text" id="imageUrl" name="imageUrl" class="form-control">
+            <input type="url" id="imageUrl" name="imageUrl" class="form-control" placeholder="https://example.com"
+                   pattern="[Hh][Tt][Tt][Pp][Ss]?:\/\/(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:\.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:\.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::\d{2,5})?(?:\/[^\s]*)?"
+                   required>
             <div class="input-group-append">
               <button type="submit" name="btn" class="btn btn-outline-dark" disabled>Add</button>
             </div>
@@ -22,18 +23,10 @@
         </form>
         <button type="button" id="deleteAll" class="btn btn-outline-danger mb-3">Delete all</button>
         <ul class="list-group">
-          <li class="list-group-item" data-key="1">
-            <div class="row" id="list">
-              <div class="col-auto">
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteFruit(1)">Delete</button>
-              </div>
-            </div>
-          </li>
         </ul>
       </div>
       <div class="card-footer"></div>
     </div>
-  </div>
 </div>
 
 <script src="popup.js"></script>

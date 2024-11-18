@@ -20,15 +20,47 @@ const pageTitle = document.head.getElementsByTagName('title')[0].innerHTML;
 console.log(`Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`);
 
 const hashes = await getAllHashes();
-Array.from(document.getElementsByTagName('img')).forEach(async e => {
-  const hash = await averageHashFromUrl(e.src);
-  Object.keys(hashes).forEach(key => {
-    if (hammingDistance(hash, hashes[key]) <= 10) {
-      console.log(`Image ${e.src} is similar to ${key}`);
-      e.style.display = 'none';
+const observer = new IntersectionObserver(async (entries, observer) => {
+  for (const entry of entries) {
+    if (entry.intersectionRatio > 0) {
+      console.log('Image will be displayed soon:', entry.target.src);
+      let hash = await averageHashFromUrl(entry.target.src);
+      Object.keys(hashes).forEach(key => {
+        if (hammingDistance(hash, hashes[key]) <= 10) {
+          console.log(`Image ${entry.target.src} is similar to ${key}`);
+          entry.target.style.display = 'none';
+        }
+      });
+      observer.unobserve(entry.target);
+    }
+  }
+}, {
+  root: null,
+  rootMargin: '100px',
+});
+
+Array.from(document.getElementsByTagName('img')).forEach(img => observer.observe(img));
+
+/*
+// 3. Set up MutationObserver to detect new images
+const mutationObserver = new MutationObserver((mutations) => {
+  mutations.forEach(mutation => {
+    if (mutation.type === 'childList') {
+      // Find all new <img> elements in the added nodes
+      const newImages = [...mutation.addedNodes].filter(node => node.tagName === 'IMG'); // Check if it's an <img>
+
+      // Observe the new images
+      observeImages(newImages);
     }
   });
-})
+});
+
+const imageContainer = document.querySelector('#image-container'); // Replace with your container
+mutationObserver.observe(imageContainer, {
+  childList: true, // Listen for added/removed nodes
+  subtree: true,   // Monitor the entire subtree
+});
+*/
 
 // Listen for message
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {

@@ -9,18 +9,20 @@ import './popup.css';
     const deleteAll = document.querySelector('#deleteAll');
     const documentFragment = new DocumentFragment();
 
-    let dataKey = 2;
-
-    const deleteImage = id => {
-      ul.removeChild(ul.querySelector(`li[data-key="${id}"]`));
-      deleteAll.disabled = !ul.children.length;
-    }
+    let dataKey = 1;
 
     const createListItem = (key, url) => {
+      console.log('add :', key, url);
       const buttonDelete = document.createElement('button');
       buttonDelete.classList.add('btn', 'btn-sm', 'btn-outline-danger');
       buttonDelete.textContent = 'Delete';
-      buttonDelete.setAttribute('onclick', `deleteImage(${key})`);
+      buttonDelete.setAttribute('data-id', key);
+      buttonDelete.addEventListener('click', ev => {
+        let id = ev.currentTarget.dataset.id;
+        ul.removeChild(ul.querySelector(`li[data-key="${id}"]`));
+        deleteAll.disabled = !ul.children.length;
+        // delete from store
+      })
 
       const divButton = document.createElement('div');
       divButton.classList.add('col-auto');
@@ -52,6 +54,9 @@ import './popup.css';
       const key = dataKey++;
       const li = createListItem(key, imageUrl.value);
 
+      // save in store
+      add(imageUrl.value);
+
       documentFragment.appendChild(li);
       ul.prepend(documentFragment);
 
@@ -65,13 +70,18 @@ import './popup.css';
         ul.removeChild(ul.lastElementChild);
       }
 
+      //empty store
+
       deleteAll.disabled = true;
     });
 
     let saved = await getAllHashes();
+    console.log(saved, Object.keys(saved));
     Object.keys(saved).forEach(key => {
-      createListItem(dataKey, key)
-      $dataKey++;
+      let li = createListItem(dataKey, key);
+      dataKey++;
+      documentFragment.appendChild(li);
+      ul.prepend(documentFragment);
     });
   });
 
