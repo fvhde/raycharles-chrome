@@ -1,6 +1,7 @@
 'use strict';
 
-import { averageHashFromUrl } from './fetchImage';
+import { averageHashFromUrl, hammingDistance } from './imageWizard';
+import { getAllHashes, getHashFromStorage, setHashToStorage, removeHashFromStorage, clearAll } from './localStore';
 
 // Content script file will run in the context of web page.
 // With content script you can manipulate the web pages using
@@ -25,23 +26,23 @@ const observer = new IntersectionObserver(async (entries, observer) => {
     if (entry.intersectionRatio > 0) {
       console.log('Image will be displayed soon:', entry.target.src);
       let hash = await averageHashFromUrl(entry.target.src);
-      Object.keys(hashes).forEach(key => {
-        if (hammingDistance(hash, hashes[key]) <= 10) {
+      for (const key of Object.keys(hashes)) {
+        if (await hammingDistance(hash, hashes[key]) <= 10) {
           console.log(`Image ${entry.target.src} is similar to ${key}`);
-          entry.target.style.display = 'none';
+          entry.target.style.filter = 'blur(8px)'
+          //entry.target.style.display = 'none';
         }
-      });
+      }
       observer.unobserve(entry.target);
     }
   }
 }, {
   root: null,
-  rootMargin: '100px',
+  rootMargin: '150px',
 });
 
 Array.from(document.getElementsByTagName('img')).forEach(img => observer.observe(img));
 
-/*
 // 3. Set up MutationObserver to detect new images
 const mutationObserver = new MutationObserver((mutations) => {
   mutations.forEach(mutation => {
@@ -50,20 +51,18 @@ const mutationObserver = new MutationObserver((mutations) => {
       const newImages = [...mutation.addedNodes].filter(node => node.tagName === 'IMG'); // Check if it's an <img>
 
       // Observe the new images
-      observeImages(newImages);
+      newImages.forEach(img => observer.observe(img));
     }
   });
 });
 
-const imageContainer = document.querySelector('#image-container'); // Replace with your container
-mutationObserver.observe(imageContainer, {
+mutationObserver.observe(document.body, {
   childList: true, // Listen for added/removed nodes
   subtree: true,   // Monitor the entire subtree
 });
-*/
 
 // Listen for message
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'ADD_IMAGE') {
     let imageUrl = request.payload.src;
     let storageKey = `imageHash_${imageUrl}`;
@@ -71,62 +70,25 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     console.log(`Hidding ${imageUrl}`);
 
     // Check if the hash is already stored
-    let hash = await getHashFromStorage(storageKey);
-
-    // If not, calculate and save it
-    if (!hash) {
-      console.log(`Calculating hash for ${imageUrl}`);
-      hash = await averageHashFromUrl(imageUrl);
-      await saveHashToStorage(storageKey, hash);
-    } else {
-      console.log(`Using stored hash for ${imageUrl}`);
-    }
+    getHashFromStorage(storageKey).then(hash => {
+      // If not, calculate and save it
+      if (!hash) {
+        console.log(`Calculating hash for ${imageUrl}`);
+        averageHashFromUrl(imageUrl).then( newHash => {
+         setHashToStorage(storageKey, newHash).then(r => console.log("New hash stored"));
+        });
+      } else {
+        console.log(`Using stored hash for ${imageUrl}`);
+      }
+    });
+  } else if (request.type === 'REMOVE_IMAGE') {
+    console.log('removing :'+request.payload.key);
+    removeHashFromStorage(request.payload.key).then(r => console.log('removed'));
+  } else if (request.type === 'CLEAR_IMAGES') {
+    console.log('clearing all images');
+    clearAll().then(r => console.log('cleared'));
   }
 
   sendResponse({});
   return true;
 });
-
-// Helper function to save data to Chrome's local storage
-function saveHashToStorage(key, value) {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set({ [key]: value }, () => {
-      if (chrome.runtime.lastError) {
-        return reject(chrome.runtime.lastError);
-      }
-      resolve();
-    });
-  });
-}
-
-// Helper function to retrieve data from Chrome's local storage
-function getHashFromStorage(key) {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(key, (result) => {
-      if (chrome.runtime.lastError) {
-        return reject(chrome.runtime.lastError);
-      }
-      resolve(result[key]);
-    });
-  });
-}
-
-function getAllHashes() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(null, (items) => {
-      if (chrome.runtime.lastError) {
-        return reject(chrome.runtime.lastError);
-      }
-
-      resolve(items);
-    });
-  });
-}
-
-function hammingDistance(hashA, hashB) {
-  let distance = 0;
-  for (let i = 0; i < hashA.length; i++) {
-    if (hashA[i] !== hashB[i]) distance++;
-  }
-  return distance;
-}

@@ -1,4 +1,4 @@
-export async function averageHashFromUrl(imageUrl) {
+export async function averageHashFromUrl(imageUrl, retry = false) {
   try {
     // Step 1: Load the image from the URL
     const img = new Image();
@@ -31,5 +31,18 @@ export async function averageHashFromUrl(imageUrl) {
     return grayscaleValues.map(value => (value > averageBrightness ? '1' : '0')).join('');
   } catch (error) {
     console.error(`Error processing image from ${imageUrl}:`, error);
+    if (!retry) {
+      // Retry with a proxy
+      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+      return await averageHashFromUrl(proxyUrl + imageUrl, true);
+    }
   }
+}
+
+export async function hammingDistance(hashA, hashB) {
+  let distance = 0;
+  for (let i = 0; i < hashA.length; i++) {
+    if (hashA[i] !== hashB[i]) distance++;
+  }
+  return distance;
 }

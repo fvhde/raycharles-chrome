@@ -1,6 +1,7 @@
 'use strict';
 
 import './popup.css';
+import { getAllHashes } from './localStore';
 
 (async function() {
   document.addEventListener('DOMContentLoaded', async function() {
@@ -22,6 +23,7 @@ import './popup.css';
         ul.removeChild(ul.querySelector(`li[data-key="${id}"]`));
         deleteAll.disabled = !ul.children.length;
         // delete from store
+        remove(url);
       })
 
       const divButton = document.createElement('div');
@@ -70,7 +72,7 @@ import './popup.css';
         ul.removeChild(ul.lastElementChild);
       }
 
-      //empty store
+      clear();
 
       deleteAll.disabled = true;
     });
@@ -87,30 +89,6 @@ import './popup.css';
 
 
   // Communicate with background file by sending a message
-  chrome.runtime.sendMessage(
-    {
-      type: 'GET_IMAGES',
-      payload: {}
-    },
-    (response) => {
-      if (chrome.runtime.lastError) {
-        console.log("Message failed:", chrome.runtime.lastError.message);
-      } else {
-        console.log("Response received:", response);
-      }
-      console.log(response);
-      if (response && response.images) {
-        console.log(response.images);
-        let div = document.getElementById('list');
-        Object.keys(response.images).forEach(key => {
-          let el = document.createElement('div');
-          div.classList.add('col-auto', 'mr-auto', 'py-1');
-          el.textContent = `${key}`;
-          div.appendChild(el);
-        });
-      }
-    }
-  );
   chrome.runtime.sendMessage(
     {
       type: 'GREETINGS',
@@ -142,14 +120,35 @@ function add(url) {
   });
 }
 
-function getAllHashes() {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(null, (items) => {
-      if (chrome.runtime.lastError) {
-        return reject(chrome.runtime.lastError);
+function remove(key) {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs[0];
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        type: 'REMOVE_IMAGE',
+        payload: {
+          key: key
+        }
+      },
+      (response) => {
+        console.log('Image removed');
       }
+    );
+  });
+}
 
-      resolve(items);
-    });
+function clear() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs[0];
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        type: 'CLEAR_IMAGES'
+      },
+      (response) => {
+        console.log('All images removed');
+      }
+    );
   });
 }

@@ -1,7 +1,5 @@
 'use strict';
 
-import { averageHashFromUrl } from './fetchImage';
-
 // With background scripts you can communicate with popup
 // and contentScript files.
 // For more information on background script,
